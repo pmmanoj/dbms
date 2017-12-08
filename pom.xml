@@ -10,6 +10,27 @@
 
     <!-- Also uploaded to REMOTE Git Repository -->
 
+    <!-- Dependencies : Dec. 7 2017 -->
+
+    <dependencies>
+
+        <!-- Getting Error: Failed to read artifact descriptor for io.sniffy:spock:jar:3.1.0.-RC10
+        <dependency>
+            <groupId>io.sniffy</groupId>
+            <artifactId>spock</artifactId>
+            <version>3.1.0-RC10</version>
+        </dependency>
+        -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.8-dmr</version>
+        </dependency>
+
+
+
+
+    </dependencies>
 
 
 
