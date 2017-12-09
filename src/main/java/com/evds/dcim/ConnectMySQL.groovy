@@ -1,43 +1,82 @@
 package com.evds.dcim
 
 // IMPORTS
-import groovy.transform.Canonical
 // import spock.lang.specification
-
-import java.sql.Connection
-import java.sql.DriverManager
-import java.sql.SQLException
-
 import groovy.sql.Sql
-
+import java.sql.SQLException
 
 // REFERENCE:
 // URL: http://docs.groovy-lang.org/latest/html/gapi/groovy/sql/Sql.html
 
-// @Cannoical
+//TODO
+/* 1. Re-factor-1 this class to ONLY provide you a SQL Connection object reference
+ * 1.1  Next, Re-factor-2, use Abstract Factory pattern and implement SQL Connect Factory (with max Limit )
+ *
+ * 2. Re-factor to split off extract from DB and File output to a separate class
+ * 2.1  Utilize this split-away class as a front-end PRODUCER to Kafka cluster
+ *
+ * 3. Re-factor to generate PROPERTY-OBJECT (JSON format) and update Metadata MongoDB store via Node.JS Service Endpoint
+ * 3.1  See below reference to Metadata
+ */
+
+
 class ConnectMySQL {
 
     static void main(String...args) {
 
-        println '*** Hello Marker Z777'
+       // Class Variables
+        String  field_0 = ''
+        String  field_1 = ''
+        String  field_2 = ''
+        String  outRecordToFile = ''
+        String  endOfLineMarker = '\n'  // we use this to terminate lines to output File
 
-       // connect to DB
-       try {
-           def db = [ dbURL: 'jdbc:mysql://192.168.99.191:3306/LENDING',
-                      dbUserName: 'datadba',
-                      dbPassword: 'Evaya123$9',
-//                      dbDriver:   'com.mysql.jdbc.Driver' // this is DEPRECATED
-                      dbDriver:   'com.mysql.cj.jdbc.Driver'
-                    ]
+        Integer recordCount   = 0
+        Integer Z9fillerCount = 0
 
-           def sql = Sql.newInstance(db.dbURL, db.dbUserName, db.dbPassword, db.dbDriver)
+       // Output file Text file with | delimiter
+       File outFile = new File('/Users/sanjivsingh/Documents/EVAYA/Apps/projects/dataOut/seedList_1-backup2.csv')
+       // Test
+       println '\n' + "The file ${outFile.absolutePath} has ${outFile.length() } bytes"
 
-           def NOW_time = sql.execute '''SELECT now()'''
-           println '*** Hello Marker Z888'
+           // Connection to DB
+           def sql =  DbUtil.createConnection()
 
-           sql.eachRow('SELECT Prospect_ID, Followers, Skills FROM sl_2 LIMIT 50' ) { row ->
-               for (int i = 0; i <= 2; i ++) {
-                   println row[i] // prints ONE row's i-th column
+           // def sql = Sql.newInstance(db.dbURL, db.dbUserName, db.dbPassword, db.dbDriver)
+
+           sql.eachRow('SELECT Prospect_ID, Followers, Skills FROM sl_2 LIMIT 500' ) { row ->
+
+                   /* TEST Code: helps you understand how eachRow method works
+                   for (int i = 0; i <= 2; i ++) { println row[i] } // prints ONE row's i-th column
+                   println row[0] + '|' + row[1] + '|' + row[2]  // prints ONE row's i-th column
+                   */
+                   field_0 = row[0]; field_1 = row[1]; field_2 = row[2]
+
+
+                   // Replace space or nulls AND maintain counts; helps with measuring Data Quality
+                   // println 'Lengths are: ' + field_0.length() + '|' + field_1.length() + '|' + field_2.length()
+                   if (field_0.length() == 0 || field_0 == null) {
+                         field_0 = 'Z9Z9Z9'
+                         Z9fillerCount++
+                   }
+
+                   if (field_1.length() == 0 || field_1 == null) {
+                          field_1 = 'Z9Z9Z9'
+                          Z9fillerCount++
+                   }
+
+                   if (field_2.length() == 0 || field_2 == null) {
+                          field_2 = 'Z9Z9Z9'
+                          Z9fillerCount++
+                   }
+
+
+
+                   // STRING together output record AND write to file
+                   outRecordToFile =  field_0 + '|' + field_1 + '|' + field_2
+
+                   if (outFile << ( outRecordToFile +  endOfLineMarker ) ) { recordCount++ } // increment record Count}
+
 
                    // TODO
                    // 1. Write the row into a file (opened via TRY / CATCH block )
@@ -53,20 +92,15 @@ class ConnectMySQL {
                    // 9B.  -- < any other >
 
 
-               }
            } // sql
 
            // close connection to DB
            sql.close()
+              println 'MSG: ----> Z9fillerCount = ' + Z9fillerCount
+              println 'MSG: ----> Record Count output to file   = ' + recordCount
+              println 'MSG: ----> SQL Connection to DB Closed '
+              println 'MSG: ----> end of program'
 
-       } catch (ClassNotFoundException | SQLException ex) {
-           println ('Error in Connection ' + ex)
-           // handle any errors
-           println('SQL Exception: ' + ex.getMessage() )
-           println('SQL State:     ' + ex.getSQLState() )
-           println('VendorError:   ' + ex.getErrorCode() )
-
-       }
 
     } // main
 
